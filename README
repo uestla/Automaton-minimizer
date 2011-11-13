@@ -30,7 +30,8 @@ the file is a row of the table and each line is splited by whitespace into
 columns.
 
 - 1st row of the file is the "heading", which contains:
-	- type of the automaton ('NFA' or 'DFA' meaning non-deterministic or deterministic)
+	- type of the automaton ('NFA' or 'DFA' meaning non-deterministic or
+		deterministic)
 	- the alphabet - for epsilon char please use '\eps'
 - all other rows contains states:
 	- first columns contains state type & name:
