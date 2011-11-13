@@ -52,7 +52,10 @@ class Automaton extends Nette\Object
 		$line = 1;
 		while (!feof($handle)) {
 
-			$parts = Strings::split( Strings::trim( fgets($handle) ) , '#[\s]+#');
+			$parts = Strings::trim( fgets($handle) );
+			if (!strlen($parts)) continue; // skip empty lines
+
+			$parts = Strings::split( $parts, '#[\s]+#');
 
 			if ($line === 1) { // heading
 
