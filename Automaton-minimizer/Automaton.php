@@ -268,6 +268,8 @@ class Automaton extends Nette\Object
 	 */
 	protected function removeState($id)
 	{
+		$id = (string) $id;
+
 		if (!isset($this->states[$id])) {
 			throw new Exception("Unable to delete state '$id' - state doesn't exist.");
 		}
@@ -277,7 +279,7 @@ class Automaton extends Nette\Object
 		unset($this->finals[$id]);
 
 		foreach ($this->states as $state) {
-			$state->removeStateById((string) $id);
+			$state->removeStateById($id);
 		}
 
 		return $this;
