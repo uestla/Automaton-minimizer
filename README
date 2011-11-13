@@ -1,0 +1,12 @@
+Automaton minimizer 1.0.0
+=========================
+
+AM is a PHP 5.3 command-line tool that helps with the basic automaton operations, such as:
+
+- removing epsilon transitions
+- determinisation
+- minimization
+
+Basic usage pattern:
+
+$ php -f example.php <source_file> [<output_file>]
