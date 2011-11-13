@@ -46,8 +46,6 @@ class Automaton extends Nette\Object
 
 		$a = new static();
 		$a->states = array();
-		$a->initials = array();
-		$a->finals = array();
 
 		$line = 1;
 		while (!feof($handle)) {
@@ -147,11 +145,8 @@ class Automaton extends Nette\Object
 		}
 
 		// sort the states by ID
-		uasort($states, 'State::compare');
-		uasort($a->initials, 'State::compare');
-		uasort($a->finals, 'State::compare');
-
 		$a->states = $states;
+		$a->updateStates();
 
 		if (!$a->isDeterministic() && $type === static::DFA) {
 			trigger_error("Automaton marked as deterministic detected as non-deterministic in '$file'.", E_USER_WARNING);
@@ -355,6 +350,8 @@ class Automaton extends Nette\Object
 	private function updateStates()
 	{
 		$this->initials = $this->finals = array();
+		uasort($this->states, 'State::compare');
+
 		foreach ($this->states as $id => $state) {
 			if ($state->initial) {
 				$this->initials[$id] = $state;
