@@ -29,8 +29,6 @@ try {
 	$a = Automaton::fromFile( getcwd() . '/' . $argv[1] )
 		->_print();
 
-	dump( $a->checkString('bdb') ); die();
-
 	echo "\n\n\n================================= Epsilon removed =================================\n\n";
 
 	$a->removeEpsilon()
