@@ -28,6 +28,10 @@ class Automaton extends Nette\Object
 
 
 
+	/******************************** automaton loading ********************************/
+
+
+
 	/**
 	 * @param  string
 	 * @return Automaton
@@ -48,14 +52,18 @@ class Automaton extends Nette\Object
 		$a->states = array();
 
 		$line = 1;
+		$headingLoaded = FALSE;
 		while (!feof($handle)) {
 
 			$parts = Strings::trim( fgets($handle) );
-			if (!strlen($parts)) continue; // skip empty lines
+			if (!strlen($parts)) { // skip empty lines
+				$line++;
+				continue;
+			}
 
 			$parts = Strings::split( $parts, '#[\s]+#');
 
-			if ($line === 1) { // heading
+			if (!$headingLoaded) {
 
 				// automaton type
 				$type = array_shift($parts);
@@ -69,6 +77,7 @@ class Automaton extends Nette\Object
 					throw new Exception("Duplicate letters found in the alphabet in '$file:$line'.");
 				}
 
+				$headingLoaded = TRUE;
 				$line++;
 				continue;
 
@@ -132,14 +141,6 @@ class Automaton extends Nette\Object
 				->setInitial( $init )
 				->setFinal( $final );
 
-			if ($init) {
-				$a->initials[$id] = $states[$id];
-			}
-
-			if ($final) {
-				$a->finals[$id] = $states[$id];
-			}
-
 			$line++;
 
 		}
@@ -158,166 +159,7 @@ class Automaton extends Nette\Object
 
 
 
-	/**
-	 * @param  bool
-	 * @return Automaton provides fluent interface
-	 */
-	public function _print($forProgtest = FALSE)
-	{
-		$space = $forProgtest
-			? function ($value = '') {
-				return '  ';
-			}
-			: function ($value = '') {
-				return strlen($value) < 8 ? "\t\t\t" : (strlen($value) < 16 ? "\t\t" : "\t");
-			};
-
-		$deterministic = $this->isDeterministic();
-
-		// heading
-		echo ($deterministic ? static::DFA : static::NFA)
-			. $space();
-
-		foreach ($this->alphabet as $letter) {
-			echo $letter . $space();
-		}
-
-		echo "\n";
-
-		if (!$forProgtest) {
-			echo str_repeat('-', count($this->alphabet) * 30) . "\n";
-		}
-
-		// states
-		foreach ($this->states as $id => $state) {
-			$state->_print($space, $forProgtest);
-		}
-
-		echo "\n";
-		return $this;
-	}
-
-
-
-	/**
-	 * @param  string
-	 * @return Automaton provides fluent interface
-	 */
-	public function save($file)
-	{
-		ob_start();
-		$this->_print(TRUE);
-		file_put_contents('safe://' . $file, Strings::normalize( ob_get_clean() ) . "\n" );
-		return $this;
-	}
-
-
-
-	/**
-	 * @return bool
-	 */
-	public function isDeterministic()
-	{
-		if (count($this->initials) > 1) return FALSE;
-
-		foreach ($this->states as $state) {
-			if ($state->hasMultipleTransitions()) return FALSE;
-		}
-
-		return TRUE;
-	}
-
-
-
-	/**
-	 * @return Automaton provides fluent interface
-	 */
-	public function validate()
-	{
-		if (!count($this->initials) || !count($this->finals)) {
-			throw new Exception("At least one initial and one final state required.");
-		}
-
-		foreach ($this->states as $state) {
-			if ($state->alphabet !== $this->alphabet) {
-				throw new Exception("Transitions of state '$state' don't match the alphabet.");
-			}
-
-			foreach ($state->transitions as $targets) {
-				foreach ($targets as $p) {
-					if (!isset($this->states[$p->id])) {
-						throw new Exception("State '$p' pointed by '$state' not found.");
-					}
-				}
-			}
-		}
-
-		return $this;
-	}
-
-
-
-	/**
-	 * @param  string
-	 * @return Automaton provides fluent interface
-	 */
-	protected function removeState($id)
-	{
-		$id = (string) $id;
-
-		if (!isset($this->states[$id])) {
-			throw new Exception("Unable to delete state '$id' - state doesn't exist.");
-		}
-
-		unset($this->states[$id]);
-		unset($this->initials[$id]);
-		unset($this->finals[$id]);
-
-		foreach ($this->states as $state) {
-			$state->removeStateById($id);
-		}
-
-		return $this;
-	}
-
-
-
-	/**
-	 * @return Automaton provides fluent interface
-	 */
-	public function removeUnreachableStates()
-	{
-		$this->scanReachable( $this->initials, $reachable );
-		foreach (array_diff($this->states, $reachable) as $state) {
-			$this->removeState($state->id);
-		}
-
-		return $this;
-	}
-
-
-
-	/**
-	 * @param  array
-	 * @param  array|NULL
-	 * @return void
-	 */
-	private function scanReachable(array $states, & $reachable = NULL)
-	{
-		if ($reachable === NULL) {
-			$reachable = array();
-		}
-
-		foreach ($states as $state) {
-			if (!in_array($state, $reachable, TRUE)) {
-				$reachable[] = $state;
-
-				foreach ($state->transitions as $letter => $targets) {
-					$this->scanReachable($targets, $reachable);
-				}
-			}
-		}
-	}
+	/******************************** transformations ********************************/
 
 
 
@@ -347,29 +189,6 @@ class Automaton extends Nette\Object
 	/**
 	 * @return Automaton provides fluent interface
 	 */
-	private function updateStates()
-	{
-		$this->initials = $this->finals = array();
-		uasort($this->states, 'State::compare');
-
-		foreach ($this->states as $id => $state) {
-			if ($state->initial) {
-				$this->initials[$id] = $state;
-			}
-
-			if ($state->final) {
-				$this->finals[$id] = $state;
-			}
-		}
-
-		return $this;
-	}
-
-
-
-	/**
-	 * @return Automaton provides fluent interface
-	 */
 	public function determinize()
 	{
 		$this->removeEpsilon();
@@ -388,79 +207,6 @@ class Automaton extends Nette\Object
 		$this->updateStates();
 
 		return $this;
-	}
-
-
-
-	/**
-	 * @param  array
-	 * @param  array|NULL
-	 * @return void
-	 */
-	private function determinizeStates(array $states, & $newStates = NULL)
-	{
-		static $list = array();
-		if ($newStates === NULL) {
-			$newStates = array();
-		}
-
-		$id = $this->createId($states);
-
-		if (!isset($newStates[$id])) {
-			$newStates[$id] = new State($id);
-		}
-
-		if (!count($newStates[$id]->transitions) && !in_array($id, $list, TRUE)) {
-			$list[] = $id;
-			$init = TRUE;
-			$final = FALSE;
-			$transitions = array();
-
-			foreach ($this->alphabet as $letter) {
-				$union = array();
-				foreach ($states as $state) {
-					if ($init && !$state->initial) { // each state has to be initial for the new state to be initial as well
-						$init = FALSE;
-					}
-
-					if (!$final && $state->final) {
-						$final = TRUE;
-					}
-
-					$union = array_merge($union, $state->transitions[$letter]);
-				}
-
-				usort($union, 'State::compare');
-				$union = array_unique($union);
-
-				$newID = $this->createId($union);
-				if (!isset($newStates[$newID])) {
-					$newStates[$newID] = new State($newID);
-				}
-
-				$transitions[$letter] = array($newStates[$newID]);
-
-				if ($newID !== $id) {
-					$this->determinizeStates( $union, $newStates );
-				}
-			}
-
-			$newStates[$id]
-					->setInitial(count($states) && $init)
-					->setFinal($final)
-					->setTransitions($transitions);
-		}
-	}
-
-
-
-	/**
-	 * @param  array
-	 * @return string
-	 */
-	private function createId(array $states)
-	{
-		return '{' . implode(',', $states) . '}';
 	}
 
 
@@ -562,6 +308,281 @@ class Automaton extends Nette\Object
 		}
 
 		return $this;
+	}
+
+
+
+	/******************************** automaton handling ********************************/
+
+
+
+	/**
+	 * @param  string
+	 * @return Automaton provides fluent interface
+	 */
+	protected function removeState($id)
+	{
+		$id = (string) $id;
+
+		if (!isset($this->states[$id])) {
+			throw new Exception("Unable to delete state '$id' - state doesn't exist.");
+		}
+
+		unset($this->states[$id]);
+		unset($this->initials[$id]);
+		unset($this->finals[$id]);
+
+		foreach ($this->states as $state) {
+			$state->removeStateById($id);
+		}
+
+		return $this;
+	}
+
+
+
+	/******************************** getters & setters ********************************/
+
+
+
+	/**
+	 * @return bool
+	 */
+	public function isDeterministic()
+	{
+		if (count($this->initials) > 1) return FALSE;
+
+		foreach ($this->states as $state) {
+			if ($state->hasMultipleTransitions()) return FALSE;
+		}
+
+		return TRUE;
+	}
+
+
+
+	/******************************** outputs ********************************/
+
+
+
+	/**
+	 * @param  bool
+	 * @return Automaton provides fluent interface
+	 */
+	public function _print($forProgtest = FALSE)
+	{
+		$space = $forProgtest
+			? function ($value = '') {
+				return '  ';
+			}
+			: function ($value = '') {
+				return strlen($value) < 8 ? "\t\t\t" : (strlen($value) < 16 ? "\t\t" : "\t");
+			};
+
+		$deterministic = $this->isDeterministic();
+
+		// heading
+		echo ($deterministic ? static::DFA : static::NFA)
+			. $space();
+
+		foreach ($this->alphabet as $letter) {
+			echo $letter . $space();
+		}
+
+		echo "\n";
+
+		if (!$forProgtest) {
+			echo str_repeat('-', count($this->alphabet) * 30) . "\n";
+		}
+
+		// states
+		foreach ($this->states as $id => $state) {
+			$state->_print($space, $forProgtest);
+		}
+
+		echo "\n";
+		return $this;
+	}
+
+
+
+	/**
+	 * @param  string
+	 * @return Automaton provides fluent interface
+	 */
+	public function save($file)
+	{
+		ob_start();
+		$this->_print(TRUE);
+		file_put_contents('safe://' . $file, Strings::normalize( ob_get_clean() ) . "\n" );
+		return $this;
+	}
+
+
+
+	/******************************** helpers ********************************/
+
+
+
+	/**
+	 * @return Automaton provides fluent interface
+	 */
+	private function updateStates()
+	{
+		$this->initials = $this->finals = array();
+		uasort($this->states, 'State::compare');
+
+		foreach ($this->states as $id => $state) {
+			if ($state->initial) {
+				$this->initials[$id] = $state;
+			}
+
+			if ($state->final) {
+				$this->finals[$id] = $state;
+			}
+		}
+
+		return $this;
+	}
+
+
+
+	/**
+	 * @return Automaton provides fluent interface
+	 */
+	public function validate()
+	{
+		if (!count($this->initials) || !count($this->finals)) {
+			throw new Exception("At least one initial and one final state required.");
+		}
+
+		foreach ($this->states as $state) {
+			if ($state->alphabet !== $this->alphabet) {
+				throw new Exception("Transitions of state '$state' don't match the alphabet.");
+			}
+
+			foreach ($state->transitions as $targets) {
+				foreach ($targets as $p) {
+					if (!isset($this->states[$p->id])) {
+						throw new Exception("State '$p' pointed by '$state' not found.");
+					}
+				}
+			}
+		}
+
+		return $this;
+	}
+
+
+
+	/**
+	 * @return Automaton provides fluent interface
+	 */
+	public function removeUnreachableStates()
+	{
+		$this->scanReachable( $this->initials, $reachable );
+		foreach (array_diff($this->states, $reachable) as $state) {
+			$this->removeState($state->id);
+		}
+
+		return $this;
+	}
+
+
+
+	/**
+	 * @param  array
+	 * @param  array|NULL
+	 * @return void
+	 */
+	private function scanReachable(array $states, & $reachable = NULL)
+	{
+		if ($reachable === NULL) {
+			$reachable = array();
+		}
+
+		foreach ($states as $state) {
+			if (!in_array($state, $reachable, TRUE)) {
+				$reachable[] = $state;
+
+				foreach ($state->transitions as $letter => $targets) {
+					$this->scanReachable($targets, $reachable);
+				}
+			}
+		}
+	}
+
+
+
+	/**
+	 * @param  array
+	 * @param  array|NULL
+	 * @return void
+	 */
+	private function determinizeStates(array $states, & $newStates = NULL)
+	{
+		static $list = array();
+		if ($newStates === NULL) {
+			$newStates = array();
+		}
+
+		$id = $this->createId($states);
+
+		if (!isset($newStates[$id])) {
+			$newStates[$id] = new State($id);
+		}
+
+		if (!count($newStates[$id]->transitions) && !in_array($id, $list, TRUE)) {
+			$list[] = $id;
+			$init = TRUE;
+			$final = FALSE;
+			$transitions = array();
+
+			foreach ($this->alphabet as $letter) {
+				$union = array();
+				foreach ($states as $state) {
+					if ($init && !$state->initial) { // each state has to be initial for the new state to be initial as well
+						$init = FALSE;
+					}
+
+					if (!$final && $state->final) {
+						$final = TRUE;
+					}
+
+					$union = array_merge($union, $state->transitions[$letter]);
+				}
+
+				usort($union, 'State::compare');
+				$union = array_unique($union);
+
+				$newID = $this->createId($union);
+				if (!isset($newStates[$newID])) {
+					$newStates[$newID] = new State($newID);
+				}
+
+				$transitions[$letter] = array($newStates[$newID]);
+
+				if ($newID !== $id) {
+					$this->determinizeStates( $union, $newStates );
+				}
+			}
+
+			$newStates[$id]
+					->setInitial(count($states) && $init)
+					->setFinal($final)
+					->setTransitions($transitions);
+		}
+	}
+
+
+
+	/**
+	 * @param  array
+	 * @return string
+	 */
+	private function createId(array $states)
+	{
+		return '{' . implode(',', $states) . '}';
 	}
 
 

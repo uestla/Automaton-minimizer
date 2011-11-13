@@ -240,6 +240,8 @@ class State extends Nette\Object
 
 
 	/**
+	 * Blind state = state which points only to itself or nowhere and is not final
+	 *
 	 * @return bool
 	 */
 	public function isBlind()
@@ -310,6 +312,17 @@ class State extends Nette\Object
 	 */
 	public static function compare(State $s1, State $s2)
 	{
-		return (int) $s1->id - (int) $s2->id;
+		if (is_numeric($s1->id) && is_numeric($s2->id)) {
+			return (double) $s1->id - (double) $s2->id;
+
+		} else {
+			$cmp = strcmp($s1->id, $s2->id);
+
+			if ($cmp && ($diff = strlen($s1->id) - strlen($s2->id) > 0)) {
+				return $diff;
+			}
+
+			return $cmp;
+		}
 	}
 }
