@@ -9,4 +9,4 @@ AM is a PHP 5.3 command-line tool that helps with the basic automaton operations
 
 Basic usage pattern:
 
-$ php -f example.php <source_file> [<output_file>]
+$ php -f run.php <source_file> [<output_file>]

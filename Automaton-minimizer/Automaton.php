@@ -514,8 +514,16 @@ class Automaton extends Nette\Object
 
 	public function checkString($s)
 	{
-		/* @see http://stackoverflow.com/questions/3666306/how-to-iterate-utf-8-string-in-php/3666326#3666326 */
-		$chars = preg_split('##u', $s, -1, PREG_SPLIT_NO_EMPTY);
-		dump($chars); die();
+		$this->normalize();
+
+		$chars = preg_split('##u', (string) $s, -1, PREG_SPLIT_NO_EMPTY);
+
+		$state = reset($this->initials);
+		foreach ($chars as $char) {
+			if (!isset($state->transitions[$char]) || !count($state->transitions[$char])) return FALSE;
+			$state = $state->transitions[$char][0];
+		}
+
+		return $state->final;
 	}
 }
