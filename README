@@ -12,4 +12,4 @@ It can:
 - normalize ~
 - check whether given string belongs into the language described by the automaton
 
-Documentation: https://github.com/uestla/Automaton-minimizer/wiki
+Documentation: http://github.com/uestla/Automaton-minimizer/wiki
