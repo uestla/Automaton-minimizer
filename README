@@ -1,11 +1,48 @@
 Automaton minimizer 1.0.0
 =========================
 
-AM is a PHP 5.3 command-line tool that helps with the basic automaton operations, such as:
+… is a powerfull tool for handling automatons written in PHP 5.3 & based on
+Nette Framework.
 
-- removing epsilon transitions
-- determinisation
-- minimization
+It can:
+- load the automaton from file (format explained below)
+- remove epsilon transitions
+- determinize the automaton
+- minimize ~
+- normalize ~
+- check whether given string belongs into the language described by the automaton
+
+As said above, the definition of the automaton we want to transform has to be
+saved in extra file.
+
+Here's one simple example:
+
+<example.txt>:
+NFA  a  b  c   \eps
+><A  B  -  C|A  -
+  B  A  A  A|B  A
+ <C  C  C  C    -
+
+
+The legend is following:
+The file content is actually a table describing the automaton. Each line of
+the file is a row of the table and each line is splited by whitespace into
+columns.
+
+- 1st row of the file is the "heading", which contains:
+	- type of the automaton ('NFA' or 'DFA' meaning non-deterministic or deterministic)
+	- the alphabet - for epsilon char please use '\eps'
+- all other rows contains states:
+	- first columns contains state type & name:
+		- '>'   means initial state
+		- '<'   means final state
+		- '><'  means initial and final state
+		the state name must not contain any whitespace character
+	- other columns describe the transitions of the state:
+		- more than 1 target state are joined with '|'
+		- '-'  means that the target is empty
+
+
 
 Basic usage pattern:
 
