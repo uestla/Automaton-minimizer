@@ -160,6 +160,10 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @param  bool
+	 * @return Automaton provides fluent interface
+	 */
 	public function _print($forProgtest = FALSE)
 	{
 		$space = $forProgtest
@@ -197,6 +201,10 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @param  string
+	 * @return Automaton provides fluent interface
+	 */
 	public function save($file)
 	{
 		ob_start();
@@ -207,6 +215,9 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @return bool
+	 */
 	public function isDeterministic()
 	{
 		if (count($this->initials) > 1) return FALSE;
@@ -220,6 +231,9 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @return Automaton provides fluent interface
+	 */
 	public function validate()
 	{
 		if (!count($this->initials) || !count($this->finals)) {
@@ -245,6 +259,10 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @param  string
+	 * @return Automaton provides fluent interface
+	 */
 	protected function removeState($id)
 	{
 		if (!isset($this->states[$id])) {
@@ -264,6 +282,9 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @return Automaton provides fluent interface
+	 */
 	public function removeUnreachableStates()
 	{
 		$this->scanReachable( $this->initials, $reachable );
@@ -276,6 +297,11 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @param  array
+	 * @param  array|NULL
+	 * @return void
+	 */
 	private function scanReachable(array $states, & $reachable = NULL)
 	{
 		if ($reachable === NULL) {
@@ -295,6 +321,9 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @return Automaton provides fluent interface
+	 */
 	public function removeEpsilon()
 	{
 		if (($epsKey = array_search(static::EPS, $this->alphabet, TRUE)) === FALSE) {
@@ -315,6 +344,9 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @return Automaton provides fluent interface
+	 */
 	private function updateStates()
 	{
 		$this->initials = $this->finals = array();
@@ -327,10 +359,15 @@ class Automaton extends Nette\Object
 				$this->finals[$id] = $state;
 			}
 		}
+
+		return $this;
 	}
 
 
 
+	/**
+	 * @return Automaton provides fluent interface
+	 */
 	public function determinize()
 	{
 		$this->removeEpsilon();
@@ -353,6 +390,11 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @param  array
+	 * @param  array|NULL
+	 * @return void
+	 */
 	private function determinizeStates(array $states, & $newStates = NULL)
 	{
 		static $list = array();
@@ -410,6 +452,10 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @param  array
+	 * @return string
+	 */
 	private function createId(array $states)
 	{
 		return '{' . implode(',', $states) . '}';
@@ -417,6 +463,9 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @return Automaton provides fluent interface
+	 */
 	public function minimize()
 	{
 		$this->determinize();
@@ -498,6 +547,9 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @return Automaton provides fluent interface
+	 */
 	public function normalize()
 	{
 		$this->minimize();
@@ -512,6 +564,10 @@ class Automaton extends Nette\Object
 
 
 
+	/**
+	 * @param  string
+	 * @return bool
+	 */
 	public function checkString($s)
 	{
 		$this->normalize();

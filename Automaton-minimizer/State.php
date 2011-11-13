@@ -1,8 +1,10 @@
 <?php
 
 /**
+ * @property-read string $id
  * @property bool $initial
  * @property bool $final
+ * @property array $transitions
  */
 class State extends Nette\Object
 {
@@ -15,11 +17,14 @@ class State extends Nette\Object
 	/** @var bool */
 	protected $final;
 
-	/** @var array of State instances */
+	/** @var array */
 	protected $transitions = array();
 
 
 
+	/**
+	 * @param  string
+	 */
 	public function __construct($id)
 	{
 		$this->id = (string) $id;
@@ -27,6 +32,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return string
+	 */
 	public function __toString()
 	{
 		return $this->id;
@@ -34,6 +42,11 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @param  mixed
+	 * @param  bool
+	 * @return void
+	 */
 	public function _print($space, $forProgtest = FALSE)
 	{
 		if ($this->initial)
@@ -61,6 +74,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return string
+	 */
 	public function getId()
 	{
 		return $this->id;
@@ -68,6 +84,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return bool
+	 */
 	public function getInitial()
 	{
 		return $this->initial;
@@ -75,6 +94,10 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @param  bool
+	 * @return State provides fluent interface
+	 */
 	public function setInitial($i = TRUE)
 	{
 		$this->initial = $i;
@@ -83,6 +106,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return bool
+	 */
 	public function getFinal()
 	{
 		return $this->final;
@@ -90,6 +116,10 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @param  bool
+	 * @return State provides fluent interface
+	 */
 	public function setFinal($f = TRUE)
 	{
 		$this->final = $f;
@@ -98,6 +128,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return array
+	 */
 	public function getTransitions()
 	{
 		return $this->transitions;
@@ -105,6 +138,10 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @param  array
+	 * @return State provides fluent interface
+	 */
 	public function setTransitions(array $t)
 	{
 		$this->transitions = $t;
@@ -113,6 +150,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return array
+	 */
 	public function getAlphabet()
 	{
 		return array_keys($this->transitions);
@@ -120,6 +160,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return State provides fluent interface
+	 */
 	public function removeEpsilon()
 	{
 		$epsKey = Automaton::EPS;
@@ -151,10 +194,17 @@ class State extends Nette\Object
 		} else {
 			unset($this->transitions[ $epsKey ]);
 		}
+
+		return $this;
 	}
 
 
 
+	/**
+	 * @param  State
+	 * @param  array|NULL
+	 * @return void
+	 */
 	private function getEpsilonUnion($state, & $union = NULL)
 	{
 		$epsKey = Automaton::EPS;
@@ -178,6 +228,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return State provides fluent interface
+	 */
 	public function normalize()
 	{
 		ksort($this->transitions);
@@ -186,6 +239,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return bool
+	 */
 	public function isBlind()
 	{
 		if ($this->final) return FALSE;
@@ -200,6 +256,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return bool
+	 */
 	public function hasMultipleTransitions()
 	{
 		foreach ($this->transitions as $letter => $targets) {
@@ -211,6 +270,9 @@ class State extends Nette\Object
 
 
 
+	/**
+	 * @return State provides fluent interface
+	 */
 	public function removeStateById($id)
 	{
 		foreach ($this->transitions as $letter => $targets) {
@@ -222,10 +284,15 @@ class State extends Nette\Object
 
 			$this->transitions[$letter] = array_values($targets);
 		}
+
+		return $this;
 	}
 
 
 
+	/**
+	 * @return State provides fluent interface
+	 */
 	public function removeTransition($letter, State $state)
 	{
 		if (($key = array_search($state, (array) $this->transitions[$letter], TRUE)) === FALSE) {
@@ -233,10 +300,14 @@ class State extends Nette\Object
 		}
 
 		unset($this->transitions[$letter][$key]);
+		return $this;
 	}
 
 
 
+	/**
+	 * @return int
+	 */
 	public static function compare(State $s1, State $s2)
 	{
 		return (int) $s1->id - (int) $s2->id;
