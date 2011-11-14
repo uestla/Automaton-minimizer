@@ -65,7 +65,7 @@ class Automaton extends Nette\Object
 				continue;
 			}
 
-			$parts = Strings::split( $parts, '#[\s]+#');
+			$parts = Strings::split( $parts, '#[\s]+#' );
 
 			if (!$headingLoaded) {
 
