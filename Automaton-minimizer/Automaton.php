@@ -152,9 +152,7 @@ class Automaton extends Nette\Object
 
 		}
 
-		// sort the states by ID
-		$a->states = $states;
-		$a->updateStates();
+		$a->updateStates( $states );
 
 		if (!$a->isDeterministic() && $type === static::DFA) {
 			trigger_error("Automaton marked as deterministic detected as non-deterministic in '$file'.", E_USER_WARNING);
@@ -205,13 +203,7 @@ class Automaton extends Nette\Object
 		}
 
 		$this->determinizeStates($this->initials, $newStates);
-
-		foreach ($this->states as $id => $state) {
-			$this->removeState($id);
-		}
-
-		$this->states = $newStates;
-		$this->updateStates();
+		$this->updateStates( $newStates );
 
 		return $this;
 	}
@@ -289,14 +281,7 @@ class Automaton extends Nette\Object
 			$states[$id]->setTransitions( $newTransitions[ $oldID ] );
 		}
 
-		// replace old states with the new ones
-		foreach ($this->states as $id => $state) {
-			$this->removeState($id);
-		}
-
-		$this->states = $states;
-		$this->updateStates();
-
+		$this->updateStates( $states );
 		return $this;
 	}
 
@@ -325,6 +310,20 @@ class Automaton extends Nette\Object
 
 
 	/******************************** automaton handling ********************************/
+
+
+
+	/**
+	 * @return Automaton provides fluent interface
+	 */
+	protected function removeAllStates()
+	{
+		foreach ($this->states as $id => $s) {
+			$this->removeState($id);
+		}
+
+		return $this;
+	}
 
 
 
@@ -437,10 +436,18 @@ class Automaton extends Nette\Object
 
 
 	/**
+	 * @param  array|NULL
 	 * @return Automaton provides fluent interface
 	 */
-	private function updateStates()
+	private function updateStates(array $newStates = NULL)
 	{
+		if ($newStates !== NULL) {
+			// delete old states first
+			$this->removeAllStates();
+
+			$this->states = $newStates;
+		}
+
 		$this->initials = $this->finals = array();
 		uasort($this->states, 'State::compare');
 
