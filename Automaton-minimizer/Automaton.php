@@ -113,6 +113,9 @@ class Automaton extends Nette\Object
 
 			if (!isset($states[$id])) {
 				$states[$id] = new State($id);
+
+			} elseif (count($states[$id]->transitions)) {
+				throw new Exception("Redefinition of state '$id' in '$file:$line'.");
 			}
 
 			$transitions = array_combine($a->alphabet, $parts);
@@ -466,6 +469,10 @@ class Automaton extends Nette\Object
 		}
 
 		foreach ($this->states as $state) {
+			if (!count($state->transitions)) {
+				throw new Exception("Definition of state '$state' not found.");
+			}
+
 			if ($state->alphabet !== $this->alphabet) {
 				throw new Exception("Transitions of state '$state' don't match the alphabet.");
 			}

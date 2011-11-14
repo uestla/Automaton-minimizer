@@ -24,10 +24,11 @@ if (!isset($argv[1])) {
 try {
 	set_time_limit(0);
 
+	$a = Automaton::fromFile( getcwd() . '/' . $argv[1] );
+
 	echo "\n\n================================ Source automaton =================================\n\n";
 
-	$a = Automaton::fromFile( getcwd() . '/' . $argv[1] )
-		->_print();
+	$a->_print();
 
 	echo "\n\n\n================================= Epsilon removed =================================\n\n";
 
@@ -48,6 +49,6 @@ try {
 	echo "\n\n\n=== Minimized automaton successfully saved to '$argv[2]'.\n\n";
 
 } catch (Exception $e) {
-	echo "Error: {$e->getMessage()}\n\n";
+	echo "\nError: {$e->getMessage()}\n\n";
 	die();
 }
