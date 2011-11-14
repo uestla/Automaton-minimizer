@@ -91,7 +91,7 @@ class Automaton extends Nette\Object
 			$id = array_shift($parts);
 			$init = $final = FALSE;
 
-			$options = preg_quote(static::INIT_ST, '#') . '|' . preg_quote(static::FINAL_ST);
+			$options = preg_quote(static::INIT_ST, '#') . '|' . preg_quote(static::FINAL_ST, '#');
 			if ($m = Strings::match($id, "#^(?:($options)($options)?)#")) {
 				array_shift($m);
 
