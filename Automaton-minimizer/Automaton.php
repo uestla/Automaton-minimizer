@@ -359,7 +359,7 @@ class Automaton extends Nette\Object
 	 */
 	public function isDeterministic()
 	{
-		if (count($this->initials) > 1) return FALSE;
+		if ( count($this->initials) > 1 || in_array(self::EPS, $this->alphabet, TRUE) ) return FALSE;
 
 		foreach ($this->states as $state) {
 			if ($state->hasMultipleTransitions()) return FALSE;
