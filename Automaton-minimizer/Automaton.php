@@ -17,6 +17,9 @@ class Automaton extends Nette\Object
 	/** @var array F */
 	protected $finals;
 
+	/** @var bool */
+	protected $normalized = FALSE;
+
 
 	const NFA = 'NFA',
 		DFA = 'DFA',
@@ -53,6 +56,7 @@ class Automaton extends Nette\Object
 
 		$line = 1;
 		$headingLoaded = FALSE;
+
 		while (!feof($handle)) {
 
 			$parts = Strings::trim( fgets($handle) );
@@ -73,7 +77,7 @@ class Automaton extends Nette\Object
 
 				// automaton alphabet
 				$a->alphabet = $parts;
-				if (count( array_unique( $a->alphabet ) ) !== count($a->alphabet)) {
+				if ( count( array_unique( $a->alphabet ) ) !== count( $a->alphabet ) ) {
 					throw new Exception("Duplicate letters found in the alphabet in '$file:$line'.");
 				}
 
@@ -300,6 +304,10 @@ class Automaton extends Nette\Object
 	 */
 	public function normalize()
 	{
+		if ($this->normalized) {
+			return $this;
+		}
+
 		$this->minimize();
 
 		sort($this->alphabet);
@@ -307,6 +315,7 @@ class Automaton extends Nette\Object
 			$state->normalize();
 		}
 
+		$this->normalized = TRUE;
 		return $this;
 	}
 
