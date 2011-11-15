@@ -12,10 +12,10 @@ class State extends Nette\Object
 	protected $id;
 
 	/** @var bool */
-	protected $initial;
+	protected $initial = FALSE;
 
 	/** @var bool */
-	protected $final;
+	protected $final = FALSE;
 
 	/** @var array */
 	protected $transitions = array();

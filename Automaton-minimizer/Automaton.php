@@ -265,8 +265,13 @@ class Automaton extends Nette\Object
 				$states[$id] = new State($id);
 			}
 
-			$states[$id]->setInitial( $this->states[$oldID]->initial)
-					->setFinal( $this->states[$oldID]->final );
+			if ( $this->states[$oldID]->initial ) {
+				$states[$id]->setInitial( TRUE );
+			}
+
+			if ( $this->states[$oldID]->final ) {
+				$states[$id]->setFinal( TRUE );
+			}
 
 			foreach ($newTransitions[$oldID] as $letter => & $target) {
 				if (!isset($states[$target])) {
