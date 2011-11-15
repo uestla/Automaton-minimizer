@@ -273,6 +273,20 @@ class State extends Nette\Object
 
 
 	/**
+	 * @return bool
+	 */
+	public function hasEmptyTransitions()
+	{
+		foreach ($this->transitions as $letter => $targets) {
+			if (!count($targets)) return TRUE;
+		}
+
+		return FALSE;
+	}
+
+
+
+	/**
 	 * @return State provides fluent interface
 	 */
 	public function removeStateById($id)

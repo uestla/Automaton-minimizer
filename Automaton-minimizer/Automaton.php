@@ -298,6 +298,8 @@ class Automaton extends Nette\Object
 
 		$this->minimize();
 
+		// TODO: @see http://www.cs.vsb.cz/kot/anim/Bravenec/minimalizace-priklad1.pdf
+
 		sort($this->alphabet);
 		foreach ($this->states as $state) {
 			$state->normalize();
@@ -364,7 +366,7 @@ class Automaton extends Nette\Object
 		if ( count($this->initials) > 1 || in_array(self::EPS, $this->alphabet, TRUE) ) return FALSE;
 
 		foreach ($this->states as $state) {
-			if ($state->hasMultipleTransitions()) return FALSE;
+			if ($state->hasMultipleTransitions() || $state->hasEmptyTransitions()) return FALSE;
 		}
 
 		return TRUE;
