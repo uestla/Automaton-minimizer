@@ -158,7 +158,6 @@ class Automaton extends Nette\Object
 			trigger_error("Automaton marked as deterministic detected as non-deterministic in '$file'.", E_USER_WARNING);
 		}
 
-		$a->validate();
 		return $a;
 	}
 
@@ -184,7 +183,6 @@ class Automaton extends Nette\Object
 		unset($this->alphabet[$epsKey]);
 
 		$this->updateStates();
-		$this->validate();
 
 		return $this;
 	}
@@ -467,6 +465,8 @@ class Automaton extends Nette\Object
 				$this->finals[$id] = $state;
 			}
 		}
+
+		$this->validate();
 
 		return $this;
 	}
