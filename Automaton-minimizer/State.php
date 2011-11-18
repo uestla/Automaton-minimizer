@@ -85,6 +85,18 @@ class State extends Nette\Object
 
 
 	/**
+	 * @param  string
+	 * @return State provides fluent interface
+	 */
+	public function setID($id)
+	{
+		$this->id = (string) $id;
+		return $this;
+	}
+
+
+
+	/**
 	 * @return bool
 	 */
 	public function getInitial()
@@ -233,7 +245,7 @@ class State extends Nette\Object
 	 */
 	public function normalize()
 	{
-		ksort($this->transitions);
+		ksort($this->transitions, SORT_STRING);
 		return $this;
 	}
 
@@ -259,29 +271,19 @@ class State extends Nette\Object
 
 
 	/**
+	 * Tests if the state is deterministic, which is TRUE when:
+	 *	- it doesn't have {epsilon} character in the alphabet
+	 *	- or when it points for every letter just into one and only other state
+	 *
 	 * @return bool
 	 */
-	public function hasMultipleTransitions()
+	public function isDeterministic()
 	{
 		foreach ($this->transitions as $letter => $targets) {
-			if (count($targets) > 1) return TRUE;
+			if ($letter === Automaton::EPS || count($targets) !== 1) return FALSE;
 		}
 
-		return FALSE;
-	}
-
-
-
-	/**
-	 * @return bool
-	 */
-	public function hasEmptyTransitions()
-	{
-		foreach ($this->transitions as $letter => $targets) {
-			if (!count($targets)) return TRUE;
-		}
-
-		return FALSE;
+		return TRUE;
 	}
 
 
@@ -293,7 +295,7 @@ class State extends Nette\Object
 	{
 		foreach ($this->transitions as $letter => $targets) {
 			foreach ($targets as $key => $state) {
-				if ($state->id === $id) {
+				if ($state->id === $id && $state->id !== $this->id) {
 					unset($targets[$key]);
 				}
 			}

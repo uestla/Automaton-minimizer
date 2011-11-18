@@ -45,8 +45,13 @@ try {
 	$a->minimize()
 		->_print();
 
+	echo "\n\n\n==================================== Normalized ====================================\n\n";
+
+	$a->normalize()
+		->_print();
+
 	$a->save( getcwd() . '/' . $argv[2] );
-	echo "\n\n\n=== Minimized automaton successfully saved to '$argv[2]'.\n\n";
+	echo "\n\n\n=== Minimized & normalized automaton successfully saved to '$argv[2]'.\n\n";
 
 } catch (Exception $e) {
 	echo "\nError: {$e->getMessage()}\n\n";

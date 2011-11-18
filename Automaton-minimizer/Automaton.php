@@ -173,7 +173,7 @@ class Automaton extends Nette\Object
 	public function removeEpsilon()
 	{
 		if (($epsKey = array_search(static::EPS, $this->alphabet, TRUE)) === FALSE) {
-			return $this; // or throw new Exception("Epsilon not found in the alphabet.") ?
+			return $this;
 		}
 
 		foreach ($this->states as $state) {
@@ -200,7 +200,7 @@ class Automaton extends Nette\Object
 			return $this;
 		}
 
-		$this->determinizeStates($this->initials, $newStates);
+		$this->determinizeStates( $this->initials, $newStates );
 		$this->updateStates( $newStates );
 
 		return $this;
@@ -301,34 +301,38 @@ class Automaton extends Nette\Object
 
 		$this->minimize();
 
-		// TODO: @see http://www.cs.vsb.cz/kot/anim/Bravenec/minimalizace-priklad1.pdf
+		// normalization process: @see http://www.cs.vsb.cz/kot/anim/Bravenec/minimalizace-priklad1.pdf
+		sort($this->alphabet, SORT_STRING);
 
-		sort($this->alphabet);
-		foreach ($this->states as $state) {
+		$newStates = array();
+		$states = $this->initials; // count($states) = 1
+
+		while (list(, $state) = each($states)) {
 			$state->normalize();
+
+			if (!in_array($state, $newStates, TRUE)) {
+				$newID = count($newStates) ? max(array_keys($newStates)) + 1 : 1;
+				$newStates[ $state->id ] = $newStates[$newID] = $state->setID($newID);
+			}
+
+			foreach ($this->alphabet as $letter) {
+				$target = $state->transitions[$letter][0];
+				if (!in_array($target, $newStates, TRUE)) {
+					$newID = max(array_keys($newStates)) + 1;
+					$states[] = $newStates[$newID] = $target->setID($newID);
+				}
+			}
 		}
 
+		$this->updateStates($newStates);
 		$this->normalized = TRUE;
+
 		return $this;
 	}
 
 
 
 	/******************************** automaton handling ********************************/
-
-
-
-	/**
-	 * @return Automaton provides fluent interface
-	 */
-	protected function removeAllStates()
-	{
-		foreach ($this->states as $id => $s) {
-			$this->removeState($id);
-		}
-
-		return $this;
-	}
 
 
 
@@ -366,10 +370,10 @@ class Automaton extends Nette\Object
 	 */
 	public function isDeterministic()
 	{
-		if ( count($this->initials) > 1 || in_array(self::EPS, $this->alphabet, TRUE) ) return FALSE;
+		if (count($this->initials) > 1) return FALSE;
 
 		foreach ($this->states as $state) {
-			if ($state->hasMultipleTransitions() || $state->hasEmptyTransitions()) return FALSE;
+			if (!$state->isDeterministic()) return FALSE;
 		}
 
 		return TRUE;
@@ -447,9 +451,6 @@ class Automaton extends Nette\Object
 	private function updateStates(array $newStates = NULL)
 	{
 		if ($newStates !== NULL) {
-			// delete old states first
-			$this->removeAllStates();
-
 			$this->states = $newStates;
 		}
 
@@ -547,13 +548,17 @@ class Automaton extends Nette\Object
 	/**
 	 * @param  array
 	 * @param  array|NULL
+	 * @param  array|NULL
 	 * @return void
 	 */
-	private function determinizeStates(array $states, & $newStates = NULL)
+	private function determinizeStates(array $states, & $newStates = NULL, & $processed = NULL)
 	{
-		static $list = array();
 		if ($newStates === NULL) {
 			$newStates = array();
+		}
+
+		if ($processed === NULL) {
+			$processed = array();
 		}
 
 		$id = $this->createId($states);
@@ -562,8 +567,8 @@ class Automaton extends Nette\Object
 			$newStates[$id] = new State($id);
 		}
 
-		if (!count($newStates[$id]->transitions) && !in_array($id, $list, TRUE)) {
-			$list[] = $id;
+		if (!count($newStates[$id]->transitions) && !in_array($id, $processed, TRUE)) {
+			$processed[] = $id;
 			$init = TRUE;
 			$final = FALSE;
 			$transitions = array();
@@ -593,7 +598,7 @@ class Automaton extends Nette\Object
 				$transitions[$letter] = array($newStates[$newID]);
 
 				if ($newID !== $id) {
-					$this->determinizeStates( $union, $newStates );
+					$this->determinizeStates( $union, $newStates, $processed );
 				}
 			}
 
