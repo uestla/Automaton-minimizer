@@ -184,7 +184,7 @@ class State extends Nette\Object
 			$transitions = array();
 
 			foreach ($union as $state) {
-				if ($state->final) {
+				if (!$this->final && $state->final) {
 					$this->final = TRUE;
 				}
 
