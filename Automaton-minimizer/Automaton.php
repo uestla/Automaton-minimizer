@@ -489,7 +489,7 @@ class Automaton extends Nette\Object
 			}
 
 			if ($state->alphabet !== $this->alphabet) {
-				throw new Exception("Transitions of state '$state' don't match the alphabet.");
+				throw new Exception("The alphabet of state '$state' don't match the alphabet of the automaton.");
 			}
 
 			foreach ($state->transitions as $targets) {
