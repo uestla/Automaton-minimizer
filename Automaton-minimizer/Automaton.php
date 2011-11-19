@@ -181,7 +181,6 @@ class Automaton extends Nette\Object
 		}
 
 		unset($this->alphabet[$epsKey]);
-
 		$this->updateStates();
 
 		return $this;
@@ -434,7 +433,7 @@ class Automaton extends Nette\Object
 	{
 		ob_start();
 		$this->_print(TRUE);
-		file_put_contents('safe://' . $file, Strings::normalize( ob_get_clean() ) . "\n" );
+		file_put_contents( 'safe://' . $file, Strings::normalize( ob_get_clean() ) . "\n" );
 		return $this;
 	}
 
@@ -454,8 +453,8 @@ class Automaton extends Nette\Object
 			$this->states = $newStates;
 		}
 
-		$this->initials = $this->finals = array();
 		uasort($this->states, 'State::compare');
+		$this->initials = $this->finals = array();
 
 		foreach ($this->states as $id => $state) {
 			if ($state->initial) {
