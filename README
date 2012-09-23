@@ -1,6 +1,8 @@
 Automaton minimizer 1.0.0
 =========================
 
+DEPRECATED: Take a look at https://github.com/uestla/Automatons-and-grammars
+
 … is a powerfull tool for handling automatons written in PHP 5.3 & based on
 Nette Framework.
 
